@@ -31,7 +31,9 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
         bool isForward = workingDays > 0;
 
         DateTime result = start;
-        // Start calculating by adjusting the result to fall within the next or previous working day
+
+        // 1. In case start date does not fall within the workday,
+        // Adjust the result to fall within the work day
         if (isForward)
         {
             if (start.TimeOfDay < workdayStart)
@@ -55,19 +57,19 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
             } 
         }
 
-        var partialDays = remainingDays - Math.Floor(remainingDays);
-
-        // Add or substract the fraction
+        // 2. Add or substract the partialDays
+        var partialDays = (remainingDays - Math.Floor(remainingDays));
         if (partialDays > 0)
         {
             // Calculate the fractional timespan to add or substract
             TimeSpan workingDaySpan = workdayEnd - workdayStart;
-            TimeSpan fraction = TimeSpan.FromTicks((long)(partialDays * workingDaySpan.Ticks));
+            TimeSpan fraction = TimeSpan.FromMinutes(partialDays * workingDaySpan.TotalMinutes);
 
             if (isForward)
             {
                 result = result + fraction; 
                 
+                // Adjust to the workday
                 if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
                 {
                     // Calculate the part of fraction remaining to be added to the next working day
@@ -80,6 +82,7 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
             {
                 result = result - fraction;
 
+                // Adjust to the workday
                 if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
                 {
                     // Calculate the part of fraction remaining to be substracted from the previous working day
@@ -91,7 +94,7 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
         }
 
 
-        // Add or substact full working days
+        // 3. Add or substact remaining full working days
         while (remainingDays >= 1) 
         {
             result = isForward ? result.AddDays(1) : result.AddDays(-1);
@@ -102,7 +105,7 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
             }
         }
 
-        // Round to the nearest minute
+        // 4. Round to the nearest minute
         result = result.Date + TimeSpan.FromMinutes(Math.Round(result.TimeOfDay.TotalMinutes));
 
         return result;
