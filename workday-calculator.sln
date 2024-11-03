@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "workday-calculator", "workday-calculator.csproj", "{53E86C0D-3538-486E-9DAD-BA091D711FE4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53E86C0D-3538-486E-9DAD-BA091D711FE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53E86C0D-3538-486E-9DAD-BA091D711FE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53E86C0D-3538-486E-9DAD-BA091D711FE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53E86C0D-3538-486E-9DAD-BA091D711FE4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1CE67014-614B-44A0-B713-8229FE8C3AA7}
+	EndGlobalSection
+EndGlobal
