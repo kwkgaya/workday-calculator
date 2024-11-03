@@ -60,8 +60,10 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
         // Add or substract the fraction
         if (partialDays > 0)
         {
+            // Calculate the fractional timespan to add or substract
             TimeSpan workingDaySpan = workdayEnd - workdayStart;
             TimeSpan fraction = TimeSpan.FromTicks((long)(partialDays * workingDaySpan.Ticks));
+
             if (isForward)
             {
                 result = result + fraction; 
@@ -99,6 +101,9 @@ public class WorkdayCalculator(TimeSpan workdayStart, TimeSpan workdayEnd)
                 remainingDays--;
             }
         }
+
+        // Round to the nearest minute
+        result = result.Date + TimeSpan.FromMinutes(Math.Round(result.TimeOfDay.TotalMinutes));
 
         return result;
     }

@@ -20,11 +20,19 @@ namespace WorkdayCalculatorTest
         }
 
         [Test]
-        public void AddWorkingDays_SubstractWorkdays()
+        public void AddWorkingDays_SubstractFractionalDays()
         {
             var result = workdayCalculator.AddWorkingDays(new DateTime(2004, 5, 24, 18, 05, 0), -5.5);
 
             result.Should().Be(new DateTime(2004, 5, 14, 12, 0, 0));
+        }
+
+        [Test]
+        public void AddWorkingDays_AddFractionalDays()
+        {
+            var result = workdayCalculator.AddWorkingDays(new DateTime(2004, 5, 24, 19, 03, 0), 44.723656);
+
+            result.Should().Be(new DateTime(2004, 7, 27, 13, 47, 0));
         }
     }
 }
