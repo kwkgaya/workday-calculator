@@ -123,7 +123,7 @@ public class WorkdayCalculator : IWorkdayCalculator
         {
             // Calculate the fractional timespan to subtract
             double fractionMinutes = ConvertToMinutes(partialDays);
-            result -= TimeSpan.FromMinutes(fractionMinutes); ;
+            result -= TimeSpan.FromMinutes(fractionMinutes);
 
             // Adjust to the workday
             if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
