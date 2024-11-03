@@ -2,15 +2,14 @@
 
 namespace WorkdayCalculate;
 
-public class WorkdayCalculator
-    : IWorkdayCalculatorConfigurer, IWorkdayCalculator
+public class WorkdayCalculator : IWorkdayCalculator
 {
     private TimeSpan workdayStart;
     private TimeSpan workdayEnd;
     private readonly HashSet<DateOnly> Holidays = new();
     private readonly HashSet<DateOnly> RecurringHolidays = new();
 
-    public void SetWorkday(TimeSpan workdayStart, TimeSpan workdayEnd) 
+    public void SetWorkday(TimeSpan workdayStart, TimeSpan workdayEnd)
     {
         if (workdayEnd <= workdayStart)
         {
@@ -43,92 +42,116 @@ public class WorkdayCalculator
         RecurringHolidays.Remove(recurringHolyday);
     }
 
-    public DateTime AddWorkingDays(DateTime start, double workingDays)
+
+    public DateTime CalculateWorkingDays(DateTime start, double workingDays)
     {
         double remainingDays = Math.Abs(workingDays);
-        bool isForward = workingDays > 0;
+        var result = workingDays > 0
+                        ? AddWorkingDays(start, remainingDays)
+                        : SubtractWorkingDays(start, remainingDays);
 
+        // 4. Round to the nearest minute
+        result = result.Date + TimeSpan.FromMinutes(Math.Round(result.TimeOfDay.TotalMinutes));
+        return result;
+    }
+
+    private DateTime AddWorkingDays(DateTime start, double workingDays)
+    {
+        double remainingDays = Math.Abs(workingDays);
         DateTime result = start;
 
-        // 1. In case start date does not fall within the workday,
+        // 1. In case start does not fall within the workday,
         // Adjust the result to fall within the work day
-        if (isForward)
+        if (start.TimeOfDay < workdayStart)
         {
-            if (start.TimeOfDay < workdayStart)
-            {
-                result = start.Date + workdayStart;
-            }
-            else if (start.TimeOfDay > workdayEnd)
-            {
-                result = start.Date.AddDays(1).Date + workdayStart;
-            }
+            result = start.Date + workdayStart;
         }
-        else
+        else if (start.TimeOfDay > workdayEnd)
         {
-            if (start.TimeOfDay < workdayStart)
-            {
-                result = start.AddDays(-1).Date + workdayEnd;
-            }
-            else if (start.TimeOfDay > workdayEnd)
-            {
-                result = start.Date + workdayEnd;
-            }
+            result = start.Date.AddDays(1).Date + workdayStart;
         }
 
-        // 2. Add or subtract the partialDays
+        // 2. Add the partialDays
         var partialDays = (remainingDays - Math.Floor(remainingDays));
         if (partialDays > 0)
         {
-            // Calculate the fractional timespan to add or subtract
+            // Calculate the fractional timespan to add
             TimeSpan workingDaySpan = workdayEnd - workdayStart;
             TimeSpan fraction = TimeSpan.FromMinutes(partialDays * workingDaySpan.TotalMinutes);
+            result += fraction;
 
-            if (isForward)
+            // Adjust result to the workday
+            if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
             {
-                result = result + fraction;
-
-                // Adjust to the workday
-                if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
-                {
-                    // Calculate the part of fraction remaining to be added to the next working day
-                    var remainingFractionForNextWorkday = (result - workdayEnd).TimeOfDay;
-                    // Take it to the next day's workday start and add the remainder
-                    result = result.Date.AddDays(1).Date + workdayStart + remainingFractionForNextWorkday;
-                }
-            }
-            else
-            {
-                result = result - fraction;
-
-                // Adjust to the workday
-                if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
-                {
-                    // Calculate the part of fraction remaining to be subtracted from the previous working day
-                    var remainingFractionForPreviousWorkday = (result - workdayStart).TimeOfDay;
-                    // Take it to the next day's workday start and add the remainder
-                    result = result.Date.AddDays(-1).Date + workdayEnd - remainingFractionForPreviousWorkday;
-                }
+                // Calculate the part of fraction remaining to be added to the next working day
+                var remainingFractionForNextWorkday = (result - workdayEnd).TimeOfDay;
+                // Take the result to the next workday's start and add the remainder
+                result = result.Date.AddDays(1).Date + workdayStart + remainingFractionForNextWorkday;
             }
         }
 
-
-        // 3. Add or subtract remaining full working days
+        // 3. Add remaining full working days
         while (remainingDays >= 1)
         {
-            result = isForward ? result.AddDays(1) : result.AddDays(-1);
-
+            result = result.AddDays(1);
             if (IsWorkingDay(new DateOnly(result.Year, result.Month, result.Day)))
             {
                 remainingDays--;
             }
         }
 
-        // 4. Round to the nearest minute
-        result = result.Date + TimeSpan.FromMinutes(Math.Round(result.TimeOfDay.TotalMinutes));
+        return result;
+    }
+
+    private DateTime SubtractWorkingDays(DateTime start, double workingDays)
+    {
+        double remainingDays = Math.Abs(workingDays);
+        DateTime result = start;
+
+        // 1. In case start date does not fall within the workday,
+        // Adjust the result to fall within the work day
+        if (start.TimeOfDay < workdayStart)
+        {
+            result = start.AddDays(-1).Date + workdayEnd;
+        }
+        else if (start.TimeOfDay > workdayEnd)
+        {
+            result = start.Date + workdayEnd;
+        }
+
+        // 2. Subtract the partialDays
+        var partialDays = (remainingDays - Math.Floor(remainingDays));
+        if (partialDays > 0)
+        {
+            // Calculate the fractional timespan to subtract
+            TimeSpan workingDaySpan = workdayEnd - workdayStart;
+            TimeSpan fraction = TimeSpan.FromMinutes(partialDays * workingDaySpan.TotalMinutes);
+            result = result - fraction;
+
+            // Adjust to the workday
+            if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
+            {
+                // Calculate the part of fraction remaining to be subtracted from the previous working day
+                var remainingFractionForPreviousWorkday = (result - workdayStart).TimeOfDay;
+                // Take the result to the previous workdday's end and subtract the remainder
+                result = result.Date.AddDays(-1).Date + workdayEnd - remainingFractionForPreviousWorkday;
+            }
+        }
+
+        // 3. Subtract remaining full working days
+        while (remainingDays >= 1)
+        {
+            result = result.AddDays(-1);
+            if (IsWorkingDay(new DateOnly(result.Year, result.Month, result.Day)))
+            {
+                remainingDays--;
+            }
+        }
 
         return result;
     }
 
+    // TODO: Write unit tests 
     public bool IsWorkingDay(DateOnly date)
     {
         return date.DayOfWeek != DayOfWeek.Saturday &&
