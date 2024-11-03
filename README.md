@@ -32,7 +32,7 @@
 • The result should be 14.05.2004 12:00
 
 ### Some other correct results:
-24-05-2004 19:03 with the addition of 44.723656 working days is 27-07-2004 13:47
-24-05-2004 18:03 with the addition of -6.7470217 working days is 13-05-2004 10:02
-24-05-2004 08:03 with the addition of 12.782709 working days is 10-06-2004 14:18
-24-05-2004 07:03 with the addition of 8.276628 working days is 04-06-2004 10:12
+- 24-05-2004 19:03 with the addition of 44.723656 working days is 27-07-2004 13:47
+- 24-05-2004 18:03 with the addition of -6.7470217 working days is 13-05-2004 10:02
+- 24-05-2004 08:03 with the addition of 12.782709 working days is 10-06-2004 14:18
+- 24-05-2004 07:03 with the addition of 8.276628 working days is 04-06-2004 10:12
