@@ -4,10 +4,10 @@ namespace WorkdayCalculate;
 
 public class WorkdayCalculator : IWorkdayCalculator
 {
-    private TimeSpan workdayStart;
-    private TimeSpan workdayEnd;
-    private readonly HashSet<DateOnly> Holidays = new();
-    private readonly HashSet<DateOnly> RecurringHolidays = new();
+    private protected TimeSpan workdayStart;
+    private protected TimeSpan workdayEnd;
+    private readonly HashSet<DateOnly> holidays = [];
+    private readonly HashSet<DateOnly> recurringHolidays = [];
 
     public void SetWorkday(TimeSpan workdayStart, TimeSpan workdayEnd)
     {
@@ -22,24 +22,24 @@ public class WorkdayCalculator : IWorkdayCalculator
 
     public void AddHoliday(DateOnly date)
     {
-        Holidays.Add(date);
+        holidays.Add(date);
     }
 
     public void AddRecurringHoliday(DateOnly date)
     {
         var recurringHolyday = new DateOnly(1, date.Month, date.Day);
-        RecurringHolidays.Add(recurringHolyday);
+        recurringHolidays.Add(recurringHolyday);
     }
 
     public void RemoveHoliday(DateOnly date)
     {
-        Holidays.Remove(date);
+        holidays.Remove(date);
     }
 
     public void RemoveRecurringHoliday(DateOnly date)
     {
         var recurringHolyday = new DateOnly(1, date.Month, date.Day);
-        RecurringHolidays.Remove(recurringHolyday);
+        recurringHolidays.Remove(recurringHolyday);
     }
 
 
@@ -52,12 +52,12 @@ public class WorkdayCalculator : IWorkdayCalculator
 
         // 4. Round to the nearest minute
         result = result.Date + TimeSpan.FromMinutes(Math.Round(result.TimeOfDay.TotalMinutes));
+        
         return result;
     }
 
-    private DateTime AddWorkingDays(DateTime start, double workingDays)
+    private DateTime AddWorkingDays(DateTime start, double remainingDays)
     {
-        double remainingDays = Math.Abs(workingDays);
         DateTime result = start;
 
         // 1. In case start does not fall within the workday,
@@ -76,9 +76,8 @@ public class WorkdayCalculator : IWorkdayCalculator
         if (partialDays > 0)
         {
             // Calculate the fractional timespan to add
-            TimeSpan workingDaySpan = workdayEnd - workdayStart;
-            TimeSpan fraction = TimeSpan.FromMinutes(partialDays * workingDaySpan.TotalMinutes);
-            result += fraction;
+            double fractionMinutes = ConvertToMinutes(partialDays);
+            result += TimeSpan.FromMinutes(fractionMinutes);
 
             // Adjust result to the workday
             if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
@@ -103,9 +102,8 @@ public class WorkdayCalculator : IWorkdayCalculator
         return result;
     }
 
-    private DateTime SubtractWorkingDays(DateTime start, double workingDays)
+    private DateTime SubtractWorkingDays(DateTime start, double remainingDays)
     {
-        double remainingDays = Math.Abs(workingDays);
         DateTime result = start;
 
         // 1. In case start date does not fall within the workday,
@@ -124,9 +122,8 @@ public class WorkdayCalculator : IWorkdayCalculator
         if (partialDays > 0)
         {
             // Calculate the fractional timespan to subtract
-            TimeSpan workingDaySpan = workdayEnd - workdayStart;
-            TimeSpan fraction = TimeSpan.FromMinutes(partialDays * workingDaySpan.TotalMinutes);
-            result = result - fraction;
+            double fractionMinutes = ConvertToMinutes(partialDays);
+            result -= TimeSpan.FromMinutes(fractionMinutes); ;
 
             // Adjust to the workday
             if (result.TimeOfDay > workdayEnd || result.TimeOfDay < workdayStart)
@@ -156,7 +153,16 @@ public class WorkdayCalculator : IWorkdayCalculator
     {
         return date.DayOfWeek != DayOfWeek.Saturday &&
                date.DayOfWeek != DayOfWeek.Sunday &&
-               !Holidays.Contains(new DateOnly(date.Year, date.Month, date.Day)) &&
-               !RecurringHolidays.Any(h => h.Day == date.Day && h.Month == date.Month);
+               !holidays.Contains(new DateOnly(date.Year, date.Month, date.Day)) &&
+               !recurringHolidays.Any(h => h.Day == date.Day && h.Month == date.Month);
+    }
+
+    protected virtual double ConvertToMinutes(double partialWorkDays)
+    {
+        double workingDayTotalMinutes = (workdayEnd - workdayStart).TotalMinutes;
+        // Convert using Math.Floor is not precise.
+        // This shall be concidered a bug
+        // Bug is fixed in the PreciseWorkdayCalculator class
+        return Math.Floor(partialWorkDays * workingDayTotalMinutes);
     }
 }
